@@ -1,0 +1,116 @@
+version: '3.1'
+
+services:
+  portainer:
+    image: portainer/portainer
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+    command: --admin-password '${PORTAINER_PASSWORD}'
+    networks:
+      - inner
+  mongo:
+    image: mongo
+    restart: always
+    networks:
+      - inner
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: dasein_main
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    command: --bind_ip=0.0.0.0
+    volumes:
+      - trading-core_mongodb:/data/db
+  timescaledb:
+    image: timescale/timescaledb:latest-pg14
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - trading-core_timescaledb2:/var/lib/postgresql/data
+    networks:
+      - inner
+#  influxdb:
+#    image: influxdb:2.5-alpine
+#    networks:
+#      - inner
+#    ports:
+#      - "8083:8083"
+#      - "8086:8086"
+#      - "25826:25826/udp"
+#    volumes:
+#      - influxdb2:/var/lib/influxdb2
+#      - ./logs:/usr/local/var/log
+#      - ./docker-images/influxdb:/etc/influxdb2_conf
+#    environment:
+#      - DOCKER_INFLUXDB_INIT_MODE=setup
+#      - DOCKER_INFLUXDB_INIT_USERNAME=dasein_main
+#      - DOCKER_INFLUXDB_INIT_PASSWORD=xQ1wwZ41QQaNB9
+#      - DOCKER_INFLUXDB_INIT_ORG=daseincore_org
+#      - DOCKER_INFLUXDB_INIT_BUCKET=dasein_bucket
+#      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=mytoken
+#      - INFLUXD_CONFIG_PATH=/etc/influxdb2_conf/config.yml
+#    restart: always
+#  telegraf:
+#    image: telegraf:latest
+#    container_name: telegraf
+#    environment:
+#      - DOCKER_INFLUXDB_INIT_ORG=daseincore_org
+#      - DOCKER_INFLUXDB_INIT_BUCKET=dasein_bucket
+#      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=mytoken
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
+#      #  Sync timezone with host
+#      - /etc/localtime:/etc/localtime:ro
+#      #  Map Telegraf configuration file
+#      - ./docker-images/influxdb/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+#      #  Map /tmp to permanent storage  (this includes /tmp/metrics.out)
+##      - influxdb2:/tmp:rw
+#    restart: unless-stopped
+#    depends_on:
+#      - influxdb
+#  mongodb2:
+#    image: mongo:4.2.8
+#    restart: always
+#    networks:
+#      - inner
+#    ports:
+#      - "27017:27017"
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: dasein_main
+#      MONGO_INITDB_ROOT_PASSWORD: xQ1wwZ41QQaNB9
+#    command: --bind_ip=0.0.0.0
+#    volumes:
+#      - mongodb2:/data/db
+#  mongo-express:
+#    image: mongo-express
+#    restart: always
+#    ports:
+#      - "8081:8081"
+#    environment:
+#      ME_CONFIG_BASICAUTH_USERNAME: dasein_main
+#      ME_CONFIG_BASICAUTH_PASSWORD: xQ1wwZ41QQaNB9
+#      ME_CONFIG_MONGODB_ADMINUSERNAME: dasein_main
+#      ME_CONFIG_MONGODB_ADMINPASSWORD: xQ1wwZ41QQaNB9
+#      ME_CONFIG_MONGODB_URL: "mongodb://dasein_main:xQ1wwZ41QQaNB9@mongodb2:27017"
+#    networks:
+#      - inner
+
+networks:
+  inner:
+
+volumes:
+  # TODO: Remove external for fresh deploy
+  trading-core_mongodb:
+    external: true
+  trading-core_timescaledb2:
+    external: true
+#  mongodb:
+#  timescaledb2:
